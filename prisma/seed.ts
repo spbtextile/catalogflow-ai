@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 
 import { AGENT_BLUEPRINTS } from "../lib/catalog/agent-definitions";
 import { buildModelNumber, buildProductSku, buildVariantSku, splitSizes } from "../lib/catalog/sku";
+import { INTEGRATION_BLUEPRINTS } from "../lib/integrations/definitions";
 
 const prisma = new PrismaClient();
 
@@ -315,6 +316,33 @@ async function main() {
       createdById: superAdmin.id,
     },
   });
+
+  await Promise.all(
+    INTEGRATION_BLUEPRINTS.map((integration) =>
+      prisma.integrationConnection.upsert({
+        where: { provider: integration.provider },
+        update: {
+          displayName: integration.displayName,
+          description: integration.description,
+          baseUrl: integration.baseUrl,
+          publicConfig: integration.publicConfig,
+          secretEnvKeys: integration.secretEnvKeys,
+          missingEnvKeys: integration.secretEnvKeys.filter((key) => !process.env[key]),
+          sortOrder: integration.sortOrder,
+        },
+        create: {
+          provider: integration.provider,
+          displayName: integration.displayName,
+          description: integration.description,
+          baseUrl: integration.baseUrl,
+          publicConfig: integration.publicConfig,
+          secretEnvKeys: integration.secretEnvKeys,
+          missingEnvKeys: integration.secretEnvKeys.filter((key) => !process.env[key]),
+          sortOrder: integration.sortOrder,
+        },
+      }),
+    ),
+  );
 }
 
 main()

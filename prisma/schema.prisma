@@ -95,6 +95,28 @@ enum MarketplacePushStatus {
   failed
 }
 
+enum IntegrationProvider {
+  supabase
+  dropbox
+  photoroom
+  remove_bg
+  shopify
+  amazon_sp_api
+  flipkart_seller
+  meesho
+  jiomart
+  upstash_redis
+  openai
+  vercel
+}
+
+enum IntegrationStatus {
+  not_configured
+  needs_config
+  connected
+  error
+}
+
 model User {
   id                     String              @id @default(cuid())
   name                   String
@@ -383,4 +405,26 @@ model MarketplacePush {
   @@unique([productId, marketplace])
   @@index([marketplace])
   @@index([status])
+}
+
+model IntegrationConnection {
+  id             String              @id @default(cuid())
+  provider       IntegrationProvider @unique
+  displayName    String
+  description    String
+  isEnabled      Boolean             @default(false)
+  status         IntegrationStatus   @default(not_configured)
+  baseUrl        String?
+  publicConfig   Json?
+  secretEnvKeys  String[]
+  missingEnvKeys String[]
+  lastTestStatus String?
+  lastTestedAt   DateTime?
+  notes          String?
+  sortOrder      Int                 @default(0)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@index([status])
+  @@index([isEnabled])
 }

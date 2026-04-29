@@ -25,6 +25,7 @@ Implemented:
 - SPB Manager Agent plus 19 specialist agents
 - Agent run history and reusable memory records
 - Marketplace push payload records for Shopify, Amazon, Flipkart, and other channels
+- Settings page for Supabase, Dropbox, Photoroom, remove.bg, Shopify, Amazon SP-API, Flipkart, Meesho, JioMart, Upstash, OpenAI, and Vercel connection options
 
 External providers are integration-ready but run in safe simulated mode until real credentials are added. This prevents accidental marketplace transmission during internal testing.
 
@@ -68,6 +69,10 @@ The **SPB Manager Agent** coordinates the pipeline:
 5. Excel Export and Marketplace Push agents prepare export/push payloads.
 
 Use `/dashboard/agents` to sync the 20-agent registry and run the master agent against a product.
+
+## API Connections
+
+Use `/dashboard/settings` to configure provider metadata and required environment variable names. Raw secrets are not stored in the database. Add real values to `.env` or your hosting provider, then use **Test environment** in Settings to verify that required variables are present.
 
 ## Production Notes
 
