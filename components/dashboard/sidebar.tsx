@@ -1,4 +1,19 @@
-import { Boxes, ClipboardList, LayoutDashboard, ShieldCheck, Store, Users } from "lucide-react";
+import {
+  Boxes,
+  BrainCircuit,
+  BriefcaseBusiness,
+  ClipboardList,
+  FileSpreadsheet,
+  Image,
+  LayoutDashboard,
+  PackagePlus,
+  Palette,
+  Rocket,
+  ShieldCheck,
+  Store,
+  Users,
+  Workflow,
+} from "lucide-react";
 import Link from "next/link";
 
 import { LogoutButton } from "@/components/dashboard/logout-button";
@@ -6,6 +21,14 @@ import { formatRole } from "@/lib/rbac";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard/products", label: "Products", icon: PackagePlus },
+  { href: "/dashboard/images", label: "Images", icon: Image },
+  { href: "/dashboard/listings", label: "Listings", icon: FileSpreadsheet },
+  { href: "/dashboard/prints", label: "Prints", icon: Palette },
+  { href: "/dashboard/bulk-jobs", label: "Bulk jobs", icon: Workflow },
+  { href: "/dashboard/agents", label: "Agents", icon: BrainCircuit },
+  { href: "/dashboard/memory", label: "Memory", icon: BriefcaseBusiness },
+  { href: "/dashboard/marketplace-push", label: "Marketplace push", icon: Rocket },
   { href: "/dashboard/staff", label: "Staff", icon: Users },
   { href: "/dashboard/seller-accounts", label: "Seller accounts", icon: Store },
   { href: "/dashboard/assignments", label: "Assignments", icon: ShieldCheck },
@@ -63,4 +86,3 @@ export function Sidebar({ user }: SidebarProps) {
     </aside>
   );
 }
-

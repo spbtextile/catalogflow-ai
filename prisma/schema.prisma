@@ -42,6 +42,59 @@ enum ListingStyle {
   premium
 }
 
+enum ProductStatus {
+  draft
+  enrichment
+  ready
+  exported
+  pushed
+  archived
+}
+
+enum ListingStatus {
+  draft
+  generated
+  approved
+  exported
+  pushed
+}
+
+enum ImageProcessingStatus {
+  uploaded
+  processing
+  processed
+  failed
+}
+
+enum JobType {
+  listing_generation
+  image_processing
+  excel_export
+  marketplace_push
+  full_pipeline
+}
+
+enum JobStatus {
+  queued
+  running
+  completed
+  failed
+}
+
+enum AgentRunStatus {
+  queued
+  running
+  completed
+  failed
+}
+
+enum MarketplacePushStatus {
+  draft
+  queued
+  pushed
+  failed
+}
+
 model User {
   id                     String              @id @default(cuid())
   name                   String
@@ -51,6 +104,11 @@ model User {
   isActive               Boolean             @default(true)
   assignedSellerAccounts UserSellerAccount[] @relation("AssignedUser")
   assignmentsCreated     UserSellerAccount[] @relation("AssignmentCreator")
+  productsCreated        Product[]           @relation("ProductCreator")
+  imagesUploaded         ProductImage[]      @relation("ImageUploader")
+  bulkJobsCreated        BulkJob[]           @relation("BulkJobCreator")
+  agentRunsCreated       AgentRun[]          @relation("AgentRunCreator")
+  memoriesCreated        AgentMemory[]       @relation("MemoryCreator")
   createdAt              DateTime            @default(now())
   updatedAt              DateTime            @updatedAt
 }
@@ -62,6 +120,7 @@ model SellerAccount {
   marketplace Marketplace
   isActive    Boolean             @default(true)
   assignments UserSellerAccount[]
+  products    Product[]
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
 }
@@ -92,6 +151,236 @@ model CategoryProfile {
   listingStyle  ListingStyle @default(detailed)
   enabledAgents String[]
   isActive      Boolean      @default(true)
+  products      Product[]
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
+}
+
+model Product {
+  id                String               @id @default(cuid())
+  sellerAccountId   String
+  categoryProfileId String
+  createdById       String?
+  brand             String
+  fabric            String
+  color             String
+  sizeRange         String
+  fit               String
+  pattern           String
+  features          String[]
+  targetAudience    String
+  isCombo           Boolean              @default(false)
+  packOf            Int                  @default(1)
+  sku               String               @unique
+  modelNumber       String               @unique
+  basePrice         Decimal              @db.Decimal(10, 2)
+  mrp               Decimal              @db.Decimal(10, 2)
+  status            ProductStatus        @default(draft)
+  sellerAccount     SellerAccount        @relation(fields: [sellerAccountId], references: [id], onDelete: Restrict)
+  categoryProfile   CategoryProfile      @relation(fields: [categoryProfileId], references: [id], onDelete: Restrict)
+  createdBy         User?                @relation("ProductCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  variants          ProductVariant[]
+  images            ProductImage[]
+  listings          MarketplaceListing[]
+  printAssets       PrintAsset[]
+  jobItems          BulkJobItem[]
+  pushes            MarketplacePush[]
+  agentRuns         AgentRun[]
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+
+  @@index([sellerAccountId])
+  @@index([categoryProfileId])
+  @@index([status])
+}
+
+model ProductVariant {
+  id        String   @id @default(cuid())
+  productId String
+  size      String
+  color     String
+  sku       String   @unique
+  price     Decimal  @db.Decimal(10, 2)
+  mrp       Decimal  @db.Decimal(10, 2)
+  stock     Int      @default(0)
+  isActive  Boolean  @default(true)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId])
+}
+
+model ProductImage {
+  id           String                @id @default(cuid())
+  productId    String
+  uploadedById String?
+  fileName     String
+  sourceUrl    String
+  dropboxPath  String
+  dropboxLink  String
+  processedUrl String?
+  marketplace  Marketplace?
+  status       ImageProcessingStatus @default(uploaded)
+  auditScore   Int?
+  notes        String?
+  sortOrder    Int                   @default(0)
+  product      Product               @relation(fields: [productId], references: [id], onDelete: Cascade)
+  uploadedBy   User?                 @relation("ImageUploader", fields: [uploadedById], references: [id], onDelete: SetNull)
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+
+  @@index([productId])
+  @@index([status])
+}
+
+model MarketplaceListing {
+  id             String            @id @default(cuid())
+  productId      String
+  marketplace    Marketplace
+  title          String
+  bullets        String[]
+  description    String
+  keywords       String[]
+  specifications Json
+  bodyHtml       String?
+  status         ListingStatus     @default(generated)
+  version        Int               @default(1)
+  isApproved     Boolean           @default(false)
+  product        Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
+  pushes         MarketplacePush[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@unique([productId, marketplace])
+  @@index([marketplace])
+  @@index([status])
+}
+
+model PrintAsset {
+  id        String                @id @default(cuid())
+  productId String
+  prompt    String
+  assetUrl  String
+  status    ImageProcessingStatus @default(processed)
+  notes     String?
+  product   Product               @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime              @default(now())
+  updatedAt DateTime              @updatedAt
+
+  @@index([productId])
+}
+
+model BulkJob {
+  id             String        @id @default(cuid())
+  title          String
+  jobType        JobType
+  status         JobStatus     @default(queued)
+  marketplace    Marketplace?
+  payload        Json?
+  totalItems     Int           @default(0)
+  processedItems Int           @default(0)
+  failedItems    Int           @default(0)
+  createdById    String?
+  createdBy      User?         @relation("BulkJobCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  items          BulkJobItem[]
+  agentRuns      AgentRun[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([jobType])
+  @@index([status])
+}
+
+model BulkJobItem {
+  id        String    @id @default(cuid())
+  bulkJobId String
+  productId String
+  status    JobStatus @default(queued)
+  message   String?
+  output    Json?
+  bulkJob   BulkJob   @relation(fields: [bulkJobId], references: [id], onDelete: Cascade)
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([bulkJobId, productId])
+  @@index([productId])
+}
+
+model AgentDefinition {
+  id           String     @id @default(cuid())
+  slug         String     @unique
+  name         String
+  description  String
+  phase        Int
+  capabilities String[]
+  isMaster     Boolean    @default(false)
+  isActive     Boolean    @default(true)
+  sortOrder    Int        @default(0)
+  runs         AgentRun[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model AgentRun {
+  id                String          @id @default(cuid())
+  agentDefinitionId String
+  productId         String?
+  bulkJobId         String?
+  createdById       String?
+  objective         String
+  status            AgentRunStatus  @default(queued)
+  input             Json
+  output            Json?
+  logs              String[]
+  startedAt         DateTime?
+  finishedAt        DateTime?
+  agentDefinition   AgentDefinition @relation(fields: [agentDefinitionId], references: [id], onDelete: Cascade)
+  product           Product?        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  bulkJob           BulkJob?        @relation(fields: [bulkJobId], references: [id], onDelete: Cascade)
+  createdBy         User?           @relation("AgentRunCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@index([agentDefinitionId])
+  @@index([productId])
+  @@index([bulkJobId])
+  @@index([status])
+}
+
+model AgentMemory {
+  id          String   @id @default(cuid())
+  scopeType   String
+  scopeKey    String
+  title       String
+  value       Json
+  createdById String?
+  createdBy   User?    @relation("MemoryCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([scopeType, scopeKey, title])
+  @@index([scopeType, scopeKey])
+}
+
+model MarketplacePush {
+  id          String                @id @default(cuid())
+  productId   String
+  listingId   String?
+  marketplace Marketplace
+  status      MarketplacePushStatus @default(queued)
+  externalId  String?
+  payload     Json
+  response    Json?
+  error       String?
+  pushedAt    DateTime?
+  product     Product               @relation(fields: [productId], references: [id], onDelete: Cascade)
+  listing     MarketplaceListing?   @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  @@unique([productId, marketplace])
+  @@index([marketplace])
+  @@index([status])
 }

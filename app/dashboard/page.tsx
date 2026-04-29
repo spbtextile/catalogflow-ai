@@ -1,4 +1,4 @@
-import { ClipboardList, Store, Users } from "lucide-react";
+import { BrainCircuit, ClipboardList, PackagePlus, Rocket, Store } from "lucide-react";
 
 import { DataPanel, EmptyState, SectionHeader, StatCard } from "@/components/dashboard/ui";
 import { formatDate, titleCase } from "@/lib/format";
@@ -10,7 +10,10 @@ export default async function DashboardPage() {
   const user = await getCurrentUser();
   const canManage = canManageWorkspace(user.role);
 
-  const [staffCount, sellerCount, categoryCount, recentAssignments, categoryProfiles] = await Promise.all([
+  const sellerAccountIds = user.assignedSellerAccounts.map((assignment) => assignment.sellerAccountId);
+
+  const [staffCount, sellerCount, categoryCount, productCount, listingCount, agentRunCount, pushCount, recentAssignments, categoryProfiles] =
+    await Promise.all([
     canManage ? prisma.user.count() : Promise.resolve(1),
     canManage
       ? prisma.sellerAccount.count()
@@ -19,6 +22,16 @@ export default async function DashboardPage() {
       where: {
         isActive: true,
       },
+    }),
+    prisma.product.count({
+      where: canManage ? undefined : { sellerAccountId: { in: sellerAccountIds } },
+    }),
+    prisma.marketplaceListing.count({
+      where: canManage ? undefined : { product: { sellerAccountId: { in: sellerAccountIds } } },
+    }),
+    prisma.agentRun.count(),
+    prisma.marketplacePush.count({
+      where: canManage ? undefined : { product: { sellerAccountId: { in: sellerAccountIds } } },
     }),
     prisma.userSellerAccount.findMany({
       where: canManage
@@ -50,13 +63,18 @@ export default async function DashboardPage() {
     <div className="space-y-8">
       <SectionHeader
         title="Dashboard"
-        description="Phase 1 workspace for staff access, seller account assignment, category rules, and catalog operations readiness."
+        description="Full CatalogFlow command center for product creation, AI agents, images, listings, Excel export, bulk jobs, memory, and marketplace push."
       />
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
         <StatCard label="Staff users" value={staffCount} hint={canManage ? "Active workspace users" : formatRole(user.role)} />
         <StatCard label="Seller accounts" value={sellerCount} hint={canManage ? "Marketplace seller profiles" : "Assigned to you"} />
         <StatCard label="Category profiles" value={categoryCount} hint="SKU, image, and listing rules" />
+        <StatCard label="Products" value={productCount} hint="Catalog records created" />
+        <StatCard label="Listings" value={listingCount} hint="Marketplace copy records" />
+        <StatCard label="Agent runs" value={agentRunCount} hint="Master and specialist activity" />
+        <StatCard label="Pushes" value={pushCount} hint="Marketplace payload records" />
+        <StatCard label="Phases" value="7/7" hint="Operational MVP complete" />
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.6fr)]">
@@ -128,17 +146,28 @@ export default async function DashboardPage() {
 
       <DataPanel>
         <div className="flex items-center gap-2">
-          <Users aria-hidden className="h-5 w-5 text-berry" />
-          <h2 className="text-lg font-semibold text-ink">Phase 1 scope</h2>
+          <BrainCircuit aria-hidden className="h-5 w-5 text-berry" />
+          <h2 className="text-lg font-semibold text-ink">Application scope</h2>
         </div>
         <div className="mt-4 grid gap-3 text-sm text-muted md:grid-cols-4">
-          <p className="rounded-md bg-paper p-3">JWT login with HTTP-only session cookie</p>
-          <p className="rounded-md bg-paper p-3">Roles: super admin, admin, staff, viewer</p>
-          <p className="rounded-md bg-paper p-3">Seller-account permissions per staff user</p>
-          <p className="rounded-md bg-paper p-3">Category profile rules for later catalog phases</p>
+          <p className="rounded-md bg-paper p-3">
+            <PackagePlus aria-hidden className="mb-2 h-4 w-4 text-moss" />
+            Product creation, SKU, model numbers, variants, and pricing
+          </p>
+          <p className="rounded-md bg-paper p-3">
+            <ClipboardList aria-hidden className="mb-2 h-4 w-4 text-amber" />
+            Listing generation, image processing records, Dropbox links, and Excel export
+          </p>
+          <p className="rounded-md bg-paper p-3">
+            <BrainCircuit aria-hidden className="mb-2 h-4 w-4 text-berry" />
+            SPB Manager Agent plus 19 specialist agents and memory
+          </p>
+          <p className="rounded-md bg-paper p-3">
+            <Rocket aria-hidden className="mb-2 h-4 w-4 text-moss" />
+            Marketplace push payloads for Shopify, Amazon, Flipkart, and other channels
+          </p>
         </div>
       </DataPanel>
     </div>
   );
 }
-

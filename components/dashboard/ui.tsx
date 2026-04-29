@@ -57,8 +57,14 @@ export const inputClass =
 export const selectClass =
   "h-10 w-full rounded-md border border-line bg-white px-3 text-sm text-ink outline-none transition focus:border-moss focus:ring-4 focus:ring-moss/10";
 
+export const textareaClass =
+  "min-h-24 w-full rounded-md border border-line bg-white px-3 py-2 text-sm text-ink outline-none transition focus:border-moss focus:ring-4 focus:ring-moss/10";
+
 export const buttonClass =
   "inline-flex h-10 items-center justify-center rounded-md bg-ink px-4 text-sm font-semibold text-white transition hover:bg-moss";
+
+export const secondaryButtonClass =
+  "inline-flex h-10 items-center justify-center rounded-md border border-line bg-white px-4 text-sm font-semibold text-ink transition hover:border-moss hover:text-moss";
 
 export function DataPanel({ children }: { children: ReactNode }) {
   return <section className="rounded-lg border border-line bg-white p-5 shadow-sm">{children}</section>;
@@ -72,3 +78,6 @@ export function EmptyState({ message }: { message: string }) {
   );
 }
 
+export function StatusBadge({ label }: { label: string }) {
+  return <span className="rounded-md bg-paper px-2 py-1 text-xs font-medium text-muted">{label}</span>;
+}
