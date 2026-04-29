@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  super_admin
+  admin
+  staff
+  viewer
+}
+
+enum PermissionLevel {
+  owner
+  manager
+  editor
+  viewer
+}
+
+enum Marketplace {
+  Amazon
+  Flipkart
+  Myntra
+  Meesho
+  Shopify
+  JioMart
+}
+
+enum ImageStyle {
+  white_bg
+  lifestyle
+  studio
+}
+
+enum ListingStyle {
+  short
+  detailed
+  premium
+}
+
+model User {
+  id                     String              @id @default(cuid())
+  name                   String
+  email                  String              @unique
+  passwordHash           String
+  role                   UserRole            @default(staff)
+  isActive               Boolean             @default(true)
+  assignedSellerAccounts UserSellerAccount[] @relation("AssignedUser")
+  assignmentsCreated     UserSellerAccount[] @relation("AssignmentCreator")
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
+}
+
+model SellerAccount {
+  id          String              @id @default(cuid())
+  name        String
+  accountCode String              @unique
+  marketplace Marketplace
+  isActive    Boolean             @default(true)
+  assignments UserSellerAccount[]
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+}
+
+model UserSellerAccount {
+  id              String          @id @default(cuid())
+  userId          String
+  sellerAccountId String
+  permissionLevel PermissionLevel @default(viewer)
+  assignedById    String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  user          User          @relation("AssignedUser", fields: [userId], references: [id], onDelete: Cascade)
+  sellerAccount SellerAccount @relation(fields: [sellerAccountId], references: [id], onDelete: Cascade)
+  assignedBy    User?         @relation("AssignmentCreator", fields: [assignedById], references: [id], onDelete: SetNull)
+
+  @@unique([userId, sellerAccountId])
+  @@index([sellerAccountId])
+}
+
+model CategoryProfile {
+  id            String       @id @default(cuid())
+  categoryName  String       @unique
+  requiresPrint Boolean      @default(false)
+  imageStyle    ImageStyle   @default(white_bg)
+  skuRules      Json
+  listingStyle  ListingStyle @default(detailed)
+  enabledAgents String[]
+  isActive      Boolean      @default(true)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
