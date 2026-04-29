@@ -19,6 +19,7 @@ import {
   secondaryButtonClass,
   selectClass,
 } from "@/components/dashboard/ui";
+import { IMAGE_ROLE_OPTIONS, evaluateImageReadiness, imageRoleLabel } from "@/lib/catalog/image-rules";
 import { formatDate, titleCase } from "@/lib/format";
 import { canEditCatalog } from "@/lib/rbac";
 import { prisma } from "@/lib/prisma";
@@ -52,6 +53,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   if (!product) {
     notFound();
   }
+
+  const imageReadiness = evaluateImageReadiness(product.images.length);
 
   return (
     <div className="space-y-6">
@@ -89,6 +92,15 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                   {feature}
                 </span>
               ))}
+            </div>
+            <div className="mt-5 rounded-md border border-line bg-paper p-4">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-ink">Image readiness</p>
+                  <p className="mt-1 text-sm text-muted">{imageReadiness.message}</p>
+                </div>
+                <StatusBadge label={imageReadiness.label} />
+              </div>
             </div>
           </DataPanel>
 
@@ -204,6 +216,15 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                 <Field label="Source URL">
                   <input className={inputClass} name="sourceUrl" placeholder="https://..." required type="url" />
                 </Field>
+                <Field label="Image role">
+                  <select className={selectClass} name="role" required>
+                    {IMAGE_ROLE_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
                 <Field label="Marketplace use">
                   <select className={selectClass} name="marketplace">
                     <option value="">All marketplaces</option>
@@ -227,7 +248,11 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               <div className="mt-4 grid gap-3">
                 <form action={generateListingsAction}>
                   <input name="productId" type="hidden" value={product.id} />
-                  <button className={secondaryButtonClass} type="submit">
+                  <button
+                    className={`${secondaryButtonClass} disabled:cursor-not-allowed disabled:opacity-50`}
+                    disabled={!imageReadiness.canGenerateListing}
+                    type="submit"
+                  >
                     Generate all listings
                   </button>
                 </form>
@@ -252,7 +277,11 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                       </option>
                     ))}
                   </select>
-                  <button className={buttonClass} type="submit">
+                  <button
+                    className={`${buttonClass} disabled:cursor-not-allowed disabled:opacity-50`}
+                    disabled={!imageReadiness.isMarketplaceReady}
+                    type="submit"
+                  >
                     Push marketplace
                   </button>
                 </form>
@@ -269,6 +298,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="font-medium text-ink">{image.fileName}</p>
+                        <p className="mt-1 text-xs font-medium text-moss">{imageRoleLabel(image.role)}</p>
                         <p className="mt-1 truncate text-xs text-muted">{image.dropboxPath}</p>
                       </div>
                       <StatusBadge label={titleCase(image.status)} />

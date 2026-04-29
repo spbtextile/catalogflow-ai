@@ -1,5 +1,6 @@
 import { processImagesAction } from "@/app/dashboard/catalog-actions";
 import { DataPanel, EmptyState, SectionHeader, StatusBadge, secondaryButtonClass } from "@/components/dashboard/ui";
+import { imageRoleLabel } from "@/lib/catalog/image-rules";
 import { formatDate, titleCase } from "@/lib/format";
 import { canEditCatalog, canManageWorkspace } from "@/lib/rbac";
 import { prisma } from "@/lib/prisma";
@@ -57,6 +58,7 @@ export default async function ImagesPage() {
                   <tr key={image.id}>
                     <td className="py-3">
                       <p className="font-medium text-ink">{image.fileName}</p>
+                      <p className="mt-1 text-xs font-medium text-moss">{imageRoleLabel(image.role)}</p>
                       <p className="mt-1 truncate text-xs text-muted">{image.sourceUrl}</p>
                     </td>
                     <td className="py-3 text-muted">
@@ -90,4 +92,3 @@ export default async function ImagesPage() {
     </div>
   );
 }
-

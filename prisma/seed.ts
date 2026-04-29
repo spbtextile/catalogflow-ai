@@ -232,7 +232,8 @@ async function main() {
       packOf: 1,
       basePrice: 249,
       mrp: 499,
-      status: "ready",
+      status: "enrichment",
+      imageReadiness: "blocked",
       createdById: superAdmin.id,
     },
     create: {
@@ -252,7 +253,8 @@ async function main() {
       modelNumber: buildModelNumber("KTS", 1),
       basePrice: 249,
       mrp: 499,
-      status: "ready",
+      status: "enrichment",
+      imageReadiness: "blocked",
       createdById: superAdmin.id,
     },
   });
@@ -283,6 +285,7 @@ async function main() {
         productId: sampleProduct.id,
         uploadedById: superAdmin.id,
         fileName: `${sampleProduct.sku}-front.jpg`,
+        role: "main_front",
         sourceUrl: "https://example.com/catalogflow/sample-front.jpg",
         dropboxPath: `/SPB Textile/CatalogFlow/${sampleProduct.sku}/${sampleProduct.sku}-front.jpg`,
         dropboxLink: `https://dropbox.example.com/spbtextile/${encodeURIComponent(sampleProduct.sku)}/${encodeURIComponent(

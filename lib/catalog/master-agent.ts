@@ -1,6 +1,7 @@
 import type { AgentRunStatus, JobStatus, JobType, Marketplace, Prisma } from "@prisma/client";
 
 import { AGENT_BLUEPRINTS, PIPELINE_MARKETPLACES } from "@/lib/catalog/agent-definitions";
+import { evaluateImageReadiness } from "@/lib/catalog/image-rules";
 import { generateListingCopy } from "@/lib/catalog/listings";
 import { buildVariantSku, splitSizes } from "@/lib/catalog/sku";
 import { prisma } from "@/lib/prisma";
@@ -108,8 +109,14 @@ export async function generateListings(productId: string, marketplaces: readonly
     where: { id: productId },
     include: {
       sellerAccount: true,
+      images: true,
     },
   });
+  const readiness = evaluateImageReadiness(product.images.length);
+
+  if (!readiness.canGenerateListing) {
+    throw new Error(readiness.message);
+  }
 
   const listings = await Promise.all(
     marketplaces.map((marketplace) => {
@@ -124,13 +131,14 @@ export async function generateListings(productId: string, marketplaces: readonly
         },
         update: {
           ...copy,
-          status: "generated",
+          status: readiness.isMarketplaceReady ? "generated" : "draft",
           version: { increment: 1 },
         },
         create: {
           productId,
           marketplace,
           ...copy,
+          status: readiness.isMarketplaceReady ? "generated" : "draft",
         },
       });
     }),
@@ -138,7 +146,10 @@ export async function generateListings(productId: string, marketplaces: readonly
 
   await prisma.product.update({
     where: { id: productId },
-    data: { status: "ready" },
+    data: {
+      status: readiness.isMarketplaceReady ? "ready" : "enrichment",
+      imageReadiness: readiness.status,
+    },
   });
 
   return listings.length;
@@ -151,6 +162,10 @@ export async function auditImages(productId: string, createdById?: string) {
   });
 
   if (!images.length) {
+    await prisma.product.update({
+      where: { id: productId },
+      data: { imageReadiness: "blocked" },
+    });
     await writeAgentRun({
       slug: "image_audit",
       productId,
@@ -161,8 +176,10 @@ export async function auditImages(productId: string, createdById?: string) {
       output: { score: 0, message: "No images uploaded yet." },
       logs: ["Image audit completed with no uploaded images."],
     });
-    return 0;
+    return { processed: 0, readiness: evaluateImageReadiness(0) };
   }
+
+  const readiness = evaluateImageReadiness(images.length);
 
   await Promise.all(
     images.map((image, index) =>
@@ -172,11 +189,16 @@ export async function auditImages(productId: string, createdById?: string) {
           status: "processed",
           processedUrl: image.processedUrl ?? image.sourceUrl,
           auditScore: Math.max(82, 96 - index * 3),
-          notes: "Ready for marketplace review. Replace simulated processed URL when Photoroom API is configured.",
+          notes: `${readiness.message} Replace simulated processed URL when Photoroom API is configured.`,
         },
       }),
     ),
   );
+
+  await prisma.product.update({
+    where: { id: productId },
+    data: { imageReadiness: readiness.status },
+  });
 
   await writeAgentRun({
     slug: "image_audit",
@@ -185,11 +207,11 @@ export async function auditImages(productId: string, createdById?: string) {
     objective: "Audit product images",
     status: "completed",
     input: { productId, imageCount: images.length },
-    output: { processed: images.length },
-    logs: [`Processed ${images.length} image records.`],
+    output: { processed: images.length, readiness: readiness.status },
+    logs: [`Processed ${images.length} image records. ${readiness.message}`],
   });
 
-  return images.length;
+  return { processed: images.length, readiness };
 }
 
 export async function generatePrintAsset(productId: string, createdById?: string) {
@@ -228,6 +250,13 @@ export async function generatePrintAsset(productId: string, createdById?: string
 }
 
 export async function queueMarketplacePush(productId: string, marketplace: Marketplace, createdById?: string) {
+  const imageCount = await prisma.productImage.count({ where: { productId } });
+  const readiness = evaluateImageReadiness(imageCount);
+
+  if (!readiness.isMarketplaceReady) {
+    throw new Error(`Marketplace push blocked. ${readiness.message}`);
+  }
+
   const listing = await prisma.marketplaceListing.findUnique({
     where: {
       productId_marketplace: {
@@ -336,14 +365,20 @@ export async function runMasterAgent(productId: string, objective: string, creat
   const variants = await ensureProductVariants(productId);
   logs.push(`Variant Agent verified ${variants} variant rows.`);
 
-  const processedImages = await auditImages(productId, createdById);
-  logs.push(`Image Audit Agent processed ${processedImages} image records.`);
+  const imageAudit = await auditImages(productId, createdById);
+  logs.push(`Image Audit Agent processed ${imageAudit.processed} image records. ${imageAudit.readiness.message}`);
 
   const printAsset = await generatePrintAsset(productId, createdById);
   logs.push(printAsset ? "Print Generation Agent created print asset." : "Print Generation Agent skipped because category does not require print.");
 
-  const listingCount = await generateListings(productId);
-  logs.push(`Listing Agent generated ${listingCount} marketplace listings.`);
+  let listingCount = 0;
+
+  if (imageAudit.readiness.canGenerateListing) {
+    listingCount = await generateListings(productId);
+    logs.push(`Listing Agent generated ${listingCount} marketplace listings.`);
+  } else {
+    logs.push(`Listing Agent blocked: ${imageAudit.readiness.message}`);
+  }
 
   await prisma.agentMemory.upsert({
     where: {
@@ -385,10 +420,11 @@ export async function runMasterAgent(productId: string, objective: string, creat
     output: {
       hasVariants: variants > 0,
       listingCount,
-      processedImages,
-      ready: true,
+      processedImages: imageAudit.processed,
+      imageReadiness: imageAudit.readiness.status,
+      ready: imageAudit.readiness.isMarketplaceReady,
     },
-    logs: ["Quality gate passed for internal catalog readiness."],
+    logs: [imageAudit.readiness.isMarketplaceReady ? "Quality gate passed for marketplace readiness." : imageAudit.readiness.message],
   });
 
   const run = await writeAgentRun({
@@ -400,16 +436,20 @@ export async function runMasterAgent(productId: string, objective: string, creat
     input: { productId, objective, previousStatus: product.status },
     output: {
       variants,
-      processedImages,
+      processedImages: imageAudit.processed,
       listingCount,
-      status: "ready",
+      imageReadiness: imageAudit.readiness.status,
+      status: imageAudit.readiness.isMarketplaceReady ? "ready" : "enrichment",
     },
     logs,
   });
 
   await prisma.product.update({
     where: { id: productId },
-    data: { status: "ready" },
+    data: {
+      status: imageAudit.readiness.isMarketplaceReady ? "ready" : "enrichment",
+      imageReadiness: imageAudit.readiness.status,
+    },
   });
 
   await prisma.agentRun.update({

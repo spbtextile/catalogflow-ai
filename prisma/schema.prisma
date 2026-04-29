@@ -66,6 +66,23 @@ enum ImageProcessingStatus {
   failed
 }
 
+enum ProductImageRole {
+  main_front
+  back
+  side
+  detail
+  lifestyle
+  size_fit
+  pack_detail
+  extra
+}
+
+enum ImageReadinessStatus {
+  blocked
+  draft
+  ready
+}
+
 enum JobType {
   listing_generation
   image_processing
@@ -198,6 +215,7 @@ model Product {
   basePrice         Decimal              @db.Decimal(10, 2)
   mrp               Decimal              @db.Decimal(10, 2)
   status            ProductStatus        @default(draft)
+  imageReadiness    ImageReadinessStatus @default(blocked)
   sellerAccount     SellerAccount        @relation(fields: [sellerAccountId], references: [id], onDelete: Restrict)
   categoryProfile   CategoryProfile      @relation(fields: [categoryProfileId], references: [id], onDelete: Restrict)
   createdBy         User?                @relation("ProductCreator", fields: [createdById], references: [id], onDelete: SetNull)
@@ -238,6 +256,7 @@ model ProductImage {
   productId    String
   uploadedById String?
   fileName     String
+  role         ProductImageRole      @default(extra)
   sourceUrl    String
   dropboxPath  String
   dropboxLink  String

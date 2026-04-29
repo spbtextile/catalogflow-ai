@@ -1,6 +1,7 @@
 import type { Marketplace } from "@prisma/client";
 import { NextResponse } from "next/server";
 
+import { MAX_MARKETPLACE_IMAGES, evaluateImageReadiness } from "@/lib/catalog/image-rules";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 
@@ -35,7 +36,7 @@ export async function GET(request: Request) {
       product: {
         include: {
           variants: true,
-          images: true,
+          images: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] },
           sellerAccount: true,
         },
       },
@@ -44,7 +45,16 @@ export async function GET(request: Request) {
   });
 
   const rows = listings.flatMap((listing) => {
-    const imageLinks = listing.product.images.map((image) => image.dropboxLink).join(" | ");
+    const readiness = evaluateImageReadiness(listing.product.images.length);
+
+    if (!readiness.canGenerateListing) {
+      return [];
+    }
+
+    const imageLinks = listing.product.images
+      .slice(0, MAX_MARKETPLACE_IMAGES)
+      .map((image) => image.dropboxLink)
+      .join(" | ");
     const variants = listing.product.variants.length ? listing.product.variants : [null];
 
     return variants.map((variant) => ({
@@ -114,4 +124,3 @@ export async function GET(request: Request) {
     },
   });
 }
-

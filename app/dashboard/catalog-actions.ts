@@ -1,6 +1,6 @@
 "use server";
 
-import type { UserRole } from "@prisma/client";
+import type { ProductImageRole, UserRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -15,12 +15,14 @@ import {
   runMasterAgent,
   syncAgentDefinitions,
 } from "@/lib/catalog/master-agent";
+import { MAX_MARKETPLACE_IMAGES } from "@/lib/catalog/image-rules";
 import { buildModelNumber, buildProductSku, readSkuRules } from "@/lib/catalog/sku";
 import { prisma } from "@/lib/prisma";
 import { canEditCatalog, canManageWorkspace } from "@/lib/rbac";
 import { requireSession } from "@/lib/session";
 
 const marketplaceSchema = z.enum(["Amazon", "Flipkart", "Myntra", "Meesho", "Shopify", "JioMart"]);
+const imageRoleSchema = z.enum(["main_front", "back", "side", "detail", "lifestyle", "size_fit", "pack_detail", "extra"]);
 
 function readRequired(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -183,15 +185,24 @@ export async function saveProductImage(formData: FormData) {
 
   const marketplaceValue = readOptional(formData, "marketplace");
   const marketplace = marketplaceValue ? marketplaceSchema.parse(marketplaceValue) : undefined;
+  const role = imageRoleSchema.parse(readRequired(formData, "role")) as ProductImageRole;
   const fileName = readRequired(formData, "fileName");
   const sourceUrl = readRequired(formData, "sourceUrl");
   const dropboxPath = `/SPB Textile/CatalogFlow/${product.sku}/${fileName}`;
+  const existingImageCount = await prisma.productImage.count({
+    where: { productId },
+  });
+
+  if (existingImageCount >= MAX_MARKETPLACE_IMAGES) {
+    throw new Error(`Maximum ${MAX_MARKETPLACE_IMAGES} marketplace images allowed per product.`);
+  }
 
   await prisma.productImage.create({
     data: {
       productId,
       uploadedById: session.userId,
       fileName,
+      role,
       sourceUrl,
       marketplace,
       dropboxPath,
@@ -200,6 +211,7 @@ export async function saveProductImage(formData: FormData) {
     },
   });
 
+  await auditImages(productId, session.userId);
   revalidatePath(`/dashboard/products/${productId}`);
   revalidatePath("/dashboard/images");
 }

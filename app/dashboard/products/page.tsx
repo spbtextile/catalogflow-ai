@@ -11,6 +11,7 @@ import {
   inputClass,
   selectClass,
 } from "@/components/dashboard/ui";
+import { evaluateImageReadiness } from "@/lib/catalog/image-rules";
 import { formatDate, titleCase } from "@/lib/format";
 import { canEditCatalog, canManageWorkspace } from "@/lib/rbac";
 import { prisma } from "@/lib/prisma";
@@ -155,27 +156,34 @@ export default async function ProductsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line">
-                  {products.map((product) => (
-                    <tr key={product.id}>
-                      <td className="py-3">
-                        <Link className="font-semibold text-ink hover:text-moss" href={`/dashboard/products/${product.id}`}>
-                          {product.brand} {product.categoryProfile.categoryName}
-                        </Link>
-                        <p className="mt-1 text-xs text-muted">
-                          {product.color}, {product.sizeRange}, {product.packOf > 1 ? `Pack of ${product.packOf}` : "Single"}
-                        </p>
-                      </td>
-                      <td className="py-3 font-mono text-xs text-muted">{product.sku}</td>
-                      <td className="py-3 text-muted">{product.sellerAccount.marketplace}</td>
-                      <td className="py-3">
-                        <StatusBadge label={titleCase(product.status)} />
-                      </td>
-                      <td className="py-3 text-muted">
-                        {product._count.variants} variants, {product._count.images} images, {product._count.listings} listings
-                      </td>
-                      <td className="py-3 text-muted">{formatDate(product.updatedAt)}</td>
-                    </tr>
-                  ))}
+                  {products.map((product) => {
+                    const readiness = evaluateImageReadiness(product._count.images);
+
+                    return (
+                      <tr key={product.id}>
+                        <td className="py-3">
+                          <Link className="font-semibold text-ink hover:text-moss" href={`/dashboard/products/${product.id}`}>
+                            {product.brand} {product.categoryProfile.categoryName}
+                          </Link>
+                          <p className="mt-1 text-xs text-muted">
+                            {product.color}, {product.sizeRange}, {product.packOf > 1 ? `Pack of ${product.packOf}` : "Single"}
+                          </p>
+                        </td>
+                        <td className="py-3 font-mono text-xs text-muted">{product.sku}</td>
+                        <td className="py-3 text-muted">{product.sellerAccount.marketplace}</td>
+                        <td className="py-3">
+                          <div className="flex flex-col gap-2">
+                            <StatusBadge label={titleCase(product.status)} />
+                            <StatusBadge label={readiness.label} />
+                          </div>
+                        </td>
+                        <td className="py-3 text-muted">
+                          {product._count.variants} variants, {product._count.images}/7 images, {product._count.listings} listings
+                        </td>
+                        <td className="py-3 text-muted">{formatDate(product.updatedAt)}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -187,4 +195,3 @@ export default async function ProductsPage() {
     </div>
   );
 }
-

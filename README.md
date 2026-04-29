@@ -18,6 +18,7 @@ Implemented:
 - Product variants, pricing, MRP, combo and pack support
 - Image records with SKU-based Dropbox-style paths and links
 - Image processing/audit workflow records
+- Product image readiness rules: 3 images minimum for listing drafts, 7 recommended for marketplace-ready products, 8 maximum marketplace images
 - Marketplace listing generation for Amazon, Flipkart, Myntra, Meesho, Shopify, and JioMart
 - Excel-compatible marketplace export files
 - Print prompt and print asset records
