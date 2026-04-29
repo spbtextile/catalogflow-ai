@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  admin
+  manager
+  staff
+}
+
+enum MarketplaceType {
+  amazon
+  ebay
+  walmart
+  etsy
+  shopify
+  other
+}
+
+enum AccountStatus {
+  active
+  inactive
+  suspended
+}
+
+enum PermissionLevel {
+  read
+  write
+  admin
+}
+
+model User {
+  id            String   @id @default(cuid())
+  name          String
+  email         String   @unique
+  password_hash String
+  role          Role     @default(staff)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  seller_accounts UserSellerAccount[]
+
+  @@map("users")
+}
+
+model SellerAccount {
+  id          String          @id @default(cuid())
+  name        String
+  marketplace MarketplaceType
+  status      AccountStatus   @default(active)
+  created_at  DateTime        @default(now())
+  updated_at  DateTime        @updatedAt
+
+  users UserSellerAccount[]
+
+  @@map("seller_accounts")
+}
+
+model UserSellerAccount {
+  user_id           String
+  seller_account_id String
+  permission_level  PermissionLevel @default(read)
+  assigned_at       DateTime        @default(now())
+
+  user           User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  seller_account SellerAccount @relation(fields: [seller_account_id], references: [id], onDelete: Cascade)
+
+  @@id([user_id, seller_account_id])
+  @@map("user_seller_accounts")
+}
+
+model CategoryProfile {
+  id                  String   @id @default(cuid())
+  name                String
+  requires_print      Boolean  @default(false)
+  image_style         String   @default("white_background")
+  sku_rules_json      Json     @default("{}")
+  listing_style       String   @default("standard")
+  enabled_agents_json Json     @default("[]")
+  created_at          DateTime @default(now())
+  updated_at          DateTime @updatedAt
+
+  @@map("category_profiles")
+}
