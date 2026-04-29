@@ -60,6 +60,61 @@ function parseJsonConfig(value?: string): Prisma.InputJsonValue | undefined {
   return parsed as Prisma.InputJsonValue;
 }
 
+function mergeAuthConfig(publicConfig: Prisma.InputJsonValue | undefined, formData: FormData) {
+  const base =
+    publicConfig && typeof publicConfig === "object" && !Array.isArray(publicConfig)
+      ? { ...(publicConfig as Record<string, Prisma.InputJsonValue>) }
+      : {};
+  const fields = [
+    "connectionCategory",
+    "authMethod",
+    "apiKeyEnvKey",
+    "projectEnvKey",
+    "imageModel",
+    "imageEndpoint",
+    "oauthAuthorizationUrl",
+    "oauthTokenUrl",
+    "oauthScopes",
+    "oauthApplicationIdEnvKey",
+    "oauthClientIdEnvKey",
+    "oauthClientSecretEnvKey",
+    "oauthRedirectUriEnvKey",
+    "oauthAccessTokenEnvKey",
+    "oauthRefreshTokenEnvKey",
+  ];
+
+  fields.forEach((field) => {
+    const value = readOptional(formData, field);
+
+    if (value) {
+      base[field] = value;
+    } else {
+      delete base[field];
+    }
+  });
+
+  return base as Prisma.InputJsonValue;
+}
+
+function authEnvKeys(formData: FormData) {
+  return [
+    "apiKeyEnvKey",
+    "projectEnvKey",
+    "oauthClientIdEnvKey",
+    "oauthApplicationIdEnvKey",
+    "oauthClientSecretEnvKey",
+    "oauthRedirectUriEnvKey",
+    "oauthAccessTokenEnvKey",
+    "oauthRefreshTokenEnvKey",
+  ]
+    .map((field) => readOptional(formData, field))
+    .filter((value): value is string => Boolean(value));
+}
+
+function uniqueEnvKeys(keys: string[]) {
+  return Array.from(new Set(keys));
+}
+
 export async function syncDefaultIntegrationConnectionsAction() {
   await requireSettingsManager();
 
@@ -71,6 +126,9 @@ export async function syncDefaultIntegrationConnectionsAction() {
           displayName: integration.displayName,
           description: integration.description,
           baseUrl: integration.baseUrl,
+          publicConfig: integration.publicConfig,
+          secretEnvKeys: integration.secretEnvKeys,
+          missingEnvKeys: integration.secretEnvKeys.filter((key) => !process.env[key]),
           sortOrder: integration.sortOrder,
         },
         create: {
@@ -94,10 +152,10 @@ export async function saveIntegrationConnectionAction(formData: FormData) {
   await requireSettingsManager();
 
   const provider = providerSchema.parse(readRequired(formData, "provider"));
-  const secretEnvKeys = parseEnvKeys(readRequired(formData, "secretEnvKeys"));
+  const secretEnvKeys = uniqueEnvKeys([...parseEnvKeys(readRequired(formData, "secretEnvKeys")), ...authEnvKeys(formData)]);
   const isEnabled = formData.get("isEnabled") === "on";
   const evaluation = evaluateIntegrationStatus(isEnabled, secretEnvKeys);
-  const publicConfig = parseJsonConfig(readOptional(formData, "publicConfig"));
+  const publicConfig = mergeAuthConfig(parseJsonConfig(readOptional(formData, "publicConfig")), formData);
 
   await prisma.integrationConnection.upsert({
     where: { provider },
@@ -154,4 +212,3 @@ export async function testIntegrationConnectionAction(formData: FormData) {
 
   revalidatePath("/dashboard/settings");
 }
-

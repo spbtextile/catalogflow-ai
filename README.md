@@ -26,7 +26,7 @@ Implemented:
 - SPB Manager Agent plus 19 specialist agents
 - Agent run history and reusable memory records
 - Marketplace push payload records for Shopify, Amazon, Flipkart, and other channels
-- Settings page for Supabase, Dropbox, Photoroom, remove.bg, Shopify, Amazon SP-API, Flipkart, Meesho, JioMart, Upstash, OpenAI, and Vercel connection options
+- Sidebar Settings page for Supabase, Dropbox, Photoroom, remove.bg, Shopify, Amazon SP-API, Flipkart, Meesho, JioMart, Upstash, OpenAI/ChatGPT image generation, and Vercel API/OAuth connection options
 
 External providers are integration-ready but run in safe simulated mode until real credentials are added. This prevents accidental marketplace transmission during internal testing.
 

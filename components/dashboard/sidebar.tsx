@@ -22,6 +22,7 @@ import { formatRole } from "@/lib/rbac";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard/settings", label: "Settings", icon: Settings },
   { href: "/dashboard/products", label: "Products", icon: PackagePlus },
   { href: "/dashboard/images", label: "Images", icon: Image },
   { href: "/dashboard/listings", label: "Listings", icon: FileSpreadsheet },
@@ -30,7 +31,6 @@ const navItems = [
   { href: "/dashboard/agents", label: "Agents", icon: BrainCircuit },
   { href: "/dashboard/memory", label: "Memory", icon: BriefcaseBusiness },
   { href: "/dashboard/marketplace-push", label: "Marketplace push", icon: Rocket },
-  { href: "/dashboard/settings", label: "Settings", icon: Settings },
   { href: "/dashboard/staff", label: "Staff", icon: Users },
   { href: "/dashboard/seller-accounts", label: "Seller accounts", icon: Store },
   { href: "/dashboard/assignments", label: "Assignments", icon: ShieldCheck },
