@@ -293,19 +293,30 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             <h2 className="text-lg font-semibold text-ink">Images</h2>
             {product.images.length ? (
               <div className="mt-4 space-y-3">
-                {product.images.map((image) => (
-                  <div className="rounded-md border border-line p-3" key={image.id}>
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="font-medium text-ink">{image.fileName}</p>
-                        <p className="mt-1 text-xs font-medium text-moss">{imageRoleLabel(image.role)}</p>
-                        <p className="mt-1 truncate text-xs text-muted">{image.dropboxPath}</p>
+                {product.images.map((image) => {
+                  const previewUrl = image.processedUrl ?? image.sourceUrl;
+
+                  return (
+                    <div className="rounded-md border border-line p-3" key={image.id}>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex min-w-0 items-start gap-3">
+                          <div
+                            aria-hidden
+                            className="h-20 w-20 shrink-0 rounded-md border border-line bg-paper bg-cover bg-center"
+                            style={{ backgroundImage: `url("${previewUrl}")` }}
+                          />
+                          <div className="min-w-0">
+                            <p className="font-medium text-ink">{image.fileName}</p>
+                            <p className="mt-1 text-xs font-medium text-moss">{imageRoleLabel(image.role)}</p>
+                            <p className="mt-1 truncate text-xs text-muted">{image.dropboxPath}</p>
+                          </div>
+                        </div>
+                        <StatusBadge label={titleCase(image.status)} />
                       </div>
-                      <StatusBadge label={titleCase(image.status)} />
+                      <p className="mt-2 text-xs text-muted">{image.notes ?? "Waiting for processing."}</p>
                     </div>
-                    <p className="mt-2 text-xs text-muted">{image.notes ?? "Waiting for processing."}</p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <EmptyState message="No image links uploaded yet." />
@@ -316,9 +327,16 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             <h2 className="text-lg font-semibold text-ink">Print and pushes</h2>
             <div className="mt-4 space-y-3">
               {product.printAssets.map((asset) => (
-                <div className="rounded-md bg-paper p-3 text-sm" key={asset.id}>
-                  <p className="font-medium text-ink">{asset.assetUrl}</p>
-                  <p className="mt-1 text-muted">{asset.prompt}</p>
+                <div className="flex gap-3 rounded-md bg-paper p-3 text-sm" key={asset.id}>
+                  <div
+                    aria-hidden
+                    className="h-20 w-20 shrink-0 rounded-md border border-line bg-white bg-cover bg-center"
+                    style={{ backgroundImage: `url("${asset.assetUrl}")` }}
+                  />
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-ink">{asset.assetUrl}</p>
+                    <p className="mt-1 text-muted">{asset.prompt}</p>
+                  </div>
                 </div>
               ))}
               {product.pushes.map((push) => (

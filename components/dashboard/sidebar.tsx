@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   Store,
   Users,
+  WandSparkles,
   Workflow,
 } from "lucide-react";
 import Link from "next/link";
@@ -23,6 +24,7 @@ import { formatRole } from "@/lib/rbac";
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
+  { href: "/dashboard/image-studio", label: "Image studio", icon: WandSparkles },
   { href: "/dashboard/products", label: "Products", icon: PackagePlus },
   { href: "/dashboard/images", label: "Images", icon: Image },
   { href: "/dashboard/listings", label: "Listings", icon: FileSpreadsheet },

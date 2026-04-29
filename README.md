@@ -15,6 +15,7 @@ Implemented:
 - Category profiles with SKU rules, image style, listing style, and enabled agents
 - Protected dashboard with sidebar navigation
 - Product creation with SKU/model-number generation
+- Image Studio workflow for prompt-to-product generation, 7 marketplace poses, print placement QA, listing feed generation, and simulated marketplace push records
 - Product variants, pricing, MRP, combo and pack support
 - Image records with SKU-based Dropbox-style paths and links
 - Image processing/audit workflow records

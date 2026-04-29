@@ -58,10 +58,17 @@ export default async function PrintsPage() {
             <div className="mt-4 space-y-3">
               {printAssets.map((asset) => (
                 <article className="rounded-lg border border-line p-4" key={asset.id}>
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                      <p className="font-semibold text-ink">{asset.product.sku}</p>
-                      <p className="mt-1 text-sm text-muted">{asset.prompt}</p>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <div
+                        aria-hidden
+                        className="h-24 w-24 shrink-0 rounded-md border border-line bg-paper bg-cover bg-center"
+                        style={{ backgroundImage: `url("${asset.assetUrl}")` }}
+                      />
+                      <div className="min-w-0">
+                        <p className="font-semibold text-ink">{asset.product.sku}</p>
+                        <p className="mt-1 text-sm text-muted">{asset.prompt}</p>
+                      </div>
                     </div>
                     <StatusBadge label={titleCase(asset.status)} />
                   </div>
@@ -78,4 +85,3 @@ export default async function PrintsPage() {
     </div>
   );
 }
-

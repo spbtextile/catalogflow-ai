@@ -34,7 +34,7 @@ export async function syncAgentDefinitions() {
   );
 }
 
-async function writeAgentRun({
+export async function writeAgentRun({
   slug,
   productId,
   bulkJobId,

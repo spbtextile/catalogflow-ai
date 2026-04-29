@@ -54,34 +54,47 @@ export default async function ImagesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-line">
-                {images.map((image) => (
-                  <tr key={image.id}>
-                    <td className="py-3">
-                      <p className="font-medium text-ink">{image.fileName}</p>
-                      <p className="mt-1 text-xs font-medium text-moss">{imageRoleLabel(image.role)}</p>
-                      <p className="mt-1 truncate text-xs text-muted">{image.sourceUrl}</p>
-                    </td>
-                    <td className="py-3 text-muted">
-                      {image.product.brand} {image.product.categoryProfile.categoryName}
-                    </td>
-                    <td className="py-3 text-xs text-muted">{image.dropboxPath}</td>
-                    <td className="py-3 text-muted">{image.auditScore ?? "-"}</td>
-                    <td className="py-3">
-                      <StatusBadge label={titleCase(image.status)} />
-                    </td>
-                    <td className="py-3 text-muted">{formatDate(image.updatedAt)}</td>
-                    <td className="py-3">
-                      {canEdit ? (
-                        <form action={processImagesAction}>
-                          <input name="productId" type="hidden" value={image.productId} />
-                          <button className={secondaryButtonClass} type="submit">
-                            Process
-                          </button>
-                        </form>
-                      ) : null}
-                    </td>
-                  </tr>
-                ))}
+                {images.map((image) => {
+                  const previewUrl = image.processedUrl ?? image.sourceUrl;
+
+                  return (
+                    <tr key={image.id}>
+                      <td className="py-3">
+                        <div className="flex min-w-0 items-start gap-3">
+                          <div
+                            aria-hidden
+                            className="h-16 w-16 shrink-0 rounded-md border border-line bg-paper bg-cover bg-center"
+                            style={{ backgroundImage: `url("${previewUrl}")` }}
+                          />
+                          <div className="min-w-0">
+                            <p className="font-medium text-ink">{image.fileName}</p>
+                            <p className="mt-1 text-xs font-medium text-moss">{imageRoleLabel(image.role)}</p>
+                            <p className="mt-1 truncate text-xs text-muted">{image.sourceUrl}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3 text-muted">
+                        {image.product.brand} {image.product.categoryProfile.categoryName}
+                      </td>
+                      <td className="py-3 text-xs text-muted">{image.dropboxPath}</td>
+                      <td className="py-3 text-muted">{image.auditScore ?? "-"}</td>
+                      <td className="py-3">
+                        <StatusBadge label={titleCase(image.status)} />
+                      </td>
+                      <td className="py-3 text-muted">{formatDate(image.updatedAt)}</td>
+                      <td className="py-3">
+                        {canEdit ? (
+                          <form action={processImagesAction}>
+                            <input name="productId" type="hidden" value={image.productId} />
+                            <button className={secondaryButtonClass} type="submit">
+                              Process
+                            </button>
+                          </form>
+                        ) : null}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

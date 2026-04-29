@@ -160,6 +160,26 @@ async function main() {
   });
 
   await prisma.categoryProfile.upsert({
+    where: { categoryName: "Mens T-shirt" },
+    update: {
+      requiresPrint: true,
+      imageStyle: ImageStyle.white_bg,
+      skuRules: { prefix: "MTS", numberingFormat: "0000", example: "MTS-BRAND-COLOR-SIZE-0001" },
+      listingStyle: ListingStyle.premium,
+      enabledAgents: ["sku", "listing", "image_audit", "print_generation", "marketplace_push"],
+      isActive: true,
+    },
+    create: {
+      categoryName: "Mens T-shirt",
+      requiresPrint: true,
+      imageStyle: ImageStyle.white_bg,
+      skuRules: { prefix: "MTS", numberingFormat: "0000", example: "MTS-BRAND-COLOR-SIZE-0001" },
+      listingStyle: ListingStyle.premium,
+      enabledAgents: ["sku", "listing", "image_audit", "print_generation", "marketplace_push"],
+    },
+  });
+
+  await prisma.categoryProfile.upsert({
     where: { categoryName: "Mens Shorts" },
     update: {
       requiresPrint: false,
