@@ -172,5 +172,5 @@ export const AGENT_BLUEPRINTS: AgentBlueprint[] = [
   },
 ];
 
-export const PIPELINE_MARKETPLACES = ["Amazon", "Flipkart", "Myntra", "Meesho", "Shopify", "JioMart"] as const;
+export const PIPELINE_MARKETPLACES = ["Amazon", "Flipkart", "Myntra", "Meesho", "Shopify", "JioMart", "woocommerce"] as const;
 
