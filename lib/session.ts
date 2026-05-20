@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { cache } from "react";
 
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/jwt";
 import { prisma } from "@/lib/prisma";
@@ -21,7 +22,7 @@ export async function requireSession() {
   return session;
 }
 
-export async function getCurrentUser() {
+export const getCurrentUser = cache(async function getCurrentUser() {
   const session = await requireSession();
 
   const user = await prisma.user.findUnique({
@@ -43,5 +44,5 @@ export async function getCurrentUser() {
   }
 
   return user;
-}
+});
 
