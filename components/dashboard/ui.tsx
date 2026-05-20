@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Inbox } from "lucide-react";
 
 type StatCardProps = {
   label: string;
@@ -61,10 +62,10 @@ export const textareaClass =
   "min-h-24 w-full rounded-md border border-line bg-white px-3 py-2 text-sm text-ink outline-none transition focus:border-moss focus:ring-4 focus:ring-moss/10";
 
 export const buttonClass =
-  "inline-flex h-10 items-center justify-center rounded-md bg-ink px-4 text-sm font-semibold text-white transition hover:bg-moss";
+  "inline-flex h-10 items-center justify-center rounded-md bg-ink px-4 text-sm font-semibold text-white transition hover:bg-moss focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-moss focus-visible:ring-offset-1";
 
 export const secondaryButtonClass =
-  "inline-flex h-10 items-center justify-center rounded-md border border-line bg-white px-4 text-sm font-semibold text-ink transition hover:border-moss hover:text-moss";
+  "inline-flex h-10 items-center justify-center rounded-md border border-line bg-white px-4 text-sm font-semibold text-ink transition hover:border-moss hover:text-moss focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-moss focus-visible:ring-offset-1";
 
 export function DataPanel({ children }: { children: ReactNode }) {
   return <section className="rounded-lg border border-line bg-white p-5 shadow-sm">{children}</section>;
@@ -72,7 +73,8 @@ export function DataPanel({ children }: { children: ReactNode }) {
 
 export function EmptyState({ message }: { message: string }) {
   return (
-    <div className="rounded-md border border-dashed border-line bg-paper px-4 py-8 text-center text-sm text-muted">
+    <div className="flex flex-col items-center justify-center rounded-md border border-dashed border-line bg-paper px-4 py-8 text-center text-sm text-muted">
+      <Inbox aria-hidden className="mb-3 h-8 w-8 text-line" />
       {message}
     </div>
   );
