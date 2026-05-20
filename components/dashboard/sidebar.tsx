@@ -15,6 +15,8 @@ import {
   Users,
   WandSparkles,
   Workflow,
+  Import,
+  LayoutGrid,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -25,6 +27,8 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
   { href: "/dashboard/image-studio", label: "Image studio", icon: WandSparkles },
+  { href: "/dashboard/designs", label: "Designs", icon: LayoutGrid },
+  { href: "/dashboard/imports", label: "Import SKUs", icon: Import },
   { href: "/dashboard/products", label: "Products", icon: PackagePlus },
   { href: "/dashboard/images", label: "Images", icon: Image },
   { href: "/dashboard/listings", label: "Listings", icon: FileSpreadsheet },

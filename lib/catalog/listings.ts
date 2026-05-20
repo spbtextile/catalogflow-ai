@@ -108,6 +108,19 @@ export function generateListingCopy(product: ListingProduct, marketplace: Market
     };
   }
 
+  if (marketplace === "woocommerce") {
+    return {
+      title: trimForMarketplace(`${product.brand} ${product.color} ${product.pattern} ${product.fabric}`, 100),
+      bullets: commonBullets,
+      description: `${product.brand} ${product.fabric} clothing for ${product.targetAudience.toLowerCase()}, available as ${packText(product).toLowerCase()}.`,
+      keywords,
+      specifications,
+      bodyHtml: `<h2>${product.brand} ${product.fabric} Garment</h2><p>Experience comfort with this ${product.pattern.toLowerCase()} garment in ${product.color.toLowerCase()}.</p><ul>${commonBullets
+        .map((bullet) => `<li>${bullet}</li>`)
+        .join("")}</ul>`,
+    };
+  }
+
   return {
     title: trimForMarketplace(`${product.brand} ${product.targetAudience} ${product.fabric} ${packText(product)}`, 120),
     bullets: commonBullets.slice(0, 3),

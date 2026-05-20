@@ -28,6 +28,7 @@ enum Marketplace {
   Meesho
   Shopify
   JioMart
+  woocommerce
 }
 
 enum ImageStyle {
@@ -125,6 +126,8 @@ enum IntegrationProvider {
   upstash_redis
   openai
   vercel
+  google_drive
+  woocommerce
 }
 
 enum IntegrationStatus {

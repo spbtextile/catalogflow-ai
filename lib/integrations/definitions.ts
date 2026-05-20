@@ -11,6 +11,8 @@ export const INTEGRATION_PROVIDER_VALUES = [
   "upstash_redis",
   "openai",
   "vercel",
+  "google_drive",
+  "woocommerce",
 ] as const;
 
 export type IntegrationProviderValue = (typeof INTEGRATION_PROVIDER_VALUES)[number];
@@ -218,5 +220,21 @@ export const INTEGRATION_BLUEPRINTS: IntegrationBlueprint[] = [
     baseUrl: "https://api.vercel.com",
     secretEnvKeys: ["VERCEL_TOKEN", "VERCEL_PROJECT_ID"],
     sortOrder: 12,
+  },
+  {
+    provider: "google_drive",
+    displayName: "Google Drive",
+    description: "Stores generated product images and print files organized by design number folder.",
+    baseUrl: "https://www.googleapis.com/drive/v3",
+    secretEnvKeys: ["GOOGLE_DRIVE_CREDENTIALS_JSON", "GOOGLE_DRIVE_ROOT_FOLDER_ID"],
+    sortOrder: 13,
+  },
+  {
+    provider: "woocommerce",
+    displayName: "WooCommerce API",
+    description: "WooCommerce listing and catalog upload target.",
+    baseUrl: "https://{store_url}/wp-json/wc/v3",
+    secretEnvKeys: ["WOOCOMMERCE_STORE_URL", "WOOCOMMERCE_CONSUMER_KEY", "WOOCOMMERCE_CONSUMER_SECRET"],
+    sortOrder: 14,
   },
 ];
