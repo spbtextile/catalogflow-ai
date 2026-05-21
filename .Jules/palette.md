@@ -1,0 +1,3 @@
+## 2024-05-21 - Active Sidebar Highlighting
+**Learning:** Adding active state highlighting to sidebar navigation links not only visually orientates the user but it also requires accessibility considerations (like `aria-current="page"`) to make screen readers understand the current location. Also `usePathname` requires the component to be a client component using the `"use client";` directive.
+**Action:** When implementing or updating navigation links, consider conditional active styles and ensure `aria-current` is applied. Watch out for Next.js app router differences with hooks like `usePathname`.

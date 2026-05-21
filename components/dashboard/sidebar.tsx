@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Boxes,
   BrainCircuit,
@@ -17,6 +19,7 @@ import {
   Workflow,
 } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { LogoutButton } from "@/components/dashboard/logout-button";
 import { formatRole } from "@/lib/rbac";
@@ -48,6 +51,8 @@ type SidebarProps = {
 };
 
 export function Sidebar({ user }: SidebarProps) {
+  const pathname = usePathname();
+
   return (
     <aside className="flex min-h-screen w-full flex-col border-r border-line bg-white px-4 py-5 lg:w-72">
       <div className="mb-8 flex items-center gap-3 px-1">
@@ -66,9 +71,14 @@ export function Sidebar({ user }: SidebarProps) {
 
           return (
             <Link
-              className="flex h-10 items-center gap-3 rounded-md px-3 text-sm font-medium text-muted transition hover:bg-paper hover:text-ink"
+              className={`flex h-10 items-center gap-3 rounded-md px-3 text-sm font-medium transition ${
+                pathname === item.href
+                  ? "bg-paper text-ink"
+                  : "text-muted hover:bg-paper hover:text-ink"
+              }`}
               href={item.href}
               key={item.href}
+              aria-current={pathname === item.href ? "page" : undefined}
             >
               <Icon aria-hidden className="h-4 w-4" />
               {item.label}
